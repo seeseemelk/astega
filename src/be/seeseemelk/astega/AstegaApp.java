@@ -19,6 +19,7 @@ public class AstegaApp
 		
 		try
 		{
+			//WaveReader wave = new WaveReader(inputFile);
 			AstegaEncoder encoder = new BitEncoder();
 			AstegaOutputStream out = new AstegaOutputStream(encoder, inputFile, outputFile);
 			System.out.println("Size limit: " + out.getSizeLimit() + " bytes");
@@ -33,6 +34,7 @@ public class AstegaApp
 		catch (IOException e)
 		{
 			System.err.println("IO Exception: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 }
