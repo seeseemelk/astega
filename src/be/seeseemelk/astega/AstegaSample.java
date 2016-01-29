@@ -3,22 +3,20 @@ package be.seeseemelk.astega;
 import java.io.File;
 import java.io.IOException;
 
-import com.jsyn.data.FloatSample;
-import com.jsyn.util.SampleLoader;
-import com.jsyn.util.WaveFileWriter;
-
 public class AstegaSample
 {
-	private float[] samples;
-	private int framerate;
+	private WaveReader wave;
+	/*private int framerate;
 	private int numChannels;
 	private int numFrames;
 	private int numSamples;
-	private int bitsPerSample;
+	private int bitsPerSample;*/
 	
 	public AstegaSample(File file) throws IOException
 	{
-		FloatSample floatSamples = SampleLoader.loadFloatSample(file);
+		wave = new WaveReader(file);
+		
+		/*FloatSample floatSamples = SampleLoader.loadFloatSample(file);
 		samples = new float[floatSamples.getNumFrames()];
 		floatSamples.read(samples);
 		
@@ -26,36 +24,39 @@ public class AstegaSample
 		numChannels = floatSamples.getChannelsPerFrame();
 		numFrames = floatSamples.getNumFrames();
 		numSamples = numChannels * numFrames;
-		bitsPerSample = 24;
+		bitsPerSample = 24;*/
 	}
 	
 	public void write(File destination) throws IOException
 	{
-		WaveFileWriter recorder = new WaveFileWriter(destination);
+		wave.flush(destination);
+		/*WaveFileWriter recorder = new WaveFileWriter(destination);
 		recorder.setBitsPerSample(24);
 		recorder.setFrameRate(getFramerate());
 		recorder.setSamplesPerFrame(getNumberOfChannels());
 		recorder.write(samples);
-		recorder.close();
+		recorder.close();*/
 	}
 	
-	public float getRawSample(int index)
+	public int getRawSample(int index)
 	{
-		return samples[index];
+		//return samples[index];
+		return wave.getSample(index);
 	}
 	
-	public void setRawSample(int index, float value)
+	public void setRawSample(int index, int value)
 	{
-		samples[index] = value;
+		//samples[index] = value;
+		wave.setSample(index, value);
 	}
 	
-	public float getSample(int index, int channel)
+	public int getSample(int index, int channel)
 	{
 		index *= getNumberOfChannels();
 		return getRawSample(index + channel);
 	}
 	
-	public void setSample(int index, int channel, float value)
+	public void setSample(int index, int channel, int value)
 	{
 		index *= getNumberOfChannels();
 		setRawSample(index + channel, value);
@@ -63,27 +64,27 @@ public class AstegaSample
 	
 	public int getNumberOfChannels()
 	{
-		return numChannels;
+		return wave.getNumberOfChannels();
 	}
 	
 	public int getNumberOfFrames()
 	{
-		return numFrames;
+		return getNumberOfSamples() / getNumberOfChannels();
 	}
 	
 	public int getNumberOfSamples()
 	{
-		return numSamples;
+		return wave.getNumberOfSamples();
 	}
 	
 	public int getFramerate()
 	{
-		return framerate;
+		return wave.getSampleRate() / getNumberOfChannels();
 	}
 	
 	public int getBitsPerSample()
 	{
-		return bitsPerSample;
+		return wave.getBitsPerSample();
 	}
 }
 

@@ -21,14 +21,9 @@ public class BitEncoder implements AstegaEncoder
 		return lastIndex; 
 	}
 	
-	private void writeBit(int b)
+	/*private void writeBit(int b)
 	{
-		float sample = samples.getRawSample(index);
-		
-		int data = Float.floatToRawIntBits(sample);
-		data = (data & 0xFFFFFFFE) | (b & 0b1);
-		
-		sample = Float.intBitsToFloat(data);
+		int sample = samples.getRawSample(index);
 		
 		samples.setRawSample(index, sample);
 		index++;
@@ -53,15 +48,16 @@ public class BitEncoder implements AstegaEncoder
 		samples.setRawSample(index, sample);
 		index++;
 		/*writeHalfNibble(b);
-		writeHalfNibble(b >> 2);*/
-	}
+		writeHalfNibble(b >> 2);*//*
+	}*/
 	
 	@Override
 	public void write(int b)
 	{
 		/*writeNibble(b);
 		writeNibble(b >> 4);*/
-		float sample = samples.getRawSample(index);
+		
+		/*float sample = samples.getRawSample(index);
 		
 		int data = Float.floatToRawIntBits(sample);
 		data = (data & 0xFFF80000) | (b & 0xFF);
@@ -69,6 +65,25 @@ public class BitEncoder implements AstegaEncoder
 		sample = Float.intBitsToFloat(data);
 		
 		samples.setRawSample(index, sample);
+		index++;*/
+		
+		int sample = samples.getRawSample(index);
+		sample = (sample & 0xFFF80000) | (b & 0xFF);
+		samples.setRawSample(index, sample);
 		index++;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
