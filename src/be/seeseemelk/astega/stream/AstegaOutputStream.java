@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import be.seeseemelk.astega.AstegaSample;
-import be.seeseemelk.astega.encoders.AstegaEncoder;
+import be.seeseemelk.astega.coders.AstegaEncoder;
 
 public class AstegaOutputStream extends OutputStream
 {
 	private AstegaEncoder encoder;
 	private AstegaSample samples;
 	private File destination;
+	private int size;
 	
 	public AstegaOutputStream(AstegaEncoder encoder, File source, File destination) throws IOException
 	{
@@ -19,6 +20,7 @@ public class AstegaOutputStream extends OutputStream
 		samples = new AstegaSample(source);
 		this.encoder = encoder;
 		encoder.setSamples(samples);
+		encoder.seek(4);
 	}
 	
 	public AstegaSample getSamples()
@@ -35,9 +37,22 @@ public class AstegaOutputStream extends OutputStream
 		return encoder.getSizeLimit();
 	}
 	
+	public void seek(int b) throws IOException
+	{
+		if (b < 0)
+			throw new IOException("Cannot seek to negative coordinates.");
+		else if (b > getSizeLimit())
+			throw new IOException("Cannot seek further than size limit.");
+		
+		encoder.seek(b);
+	}
+	
 	public void write(byte b) throws IOException
 	{
 		encoder.write(Byte.toUnsignedInt(b));
+		
+		if (encoder.tell() - 1 > size)
+			size++;
 	}
 	
 	public void write(short b) throws IOException
@@ -63,6 +78,11 @@ public class AstegaOutputStream extends OutputStream
 	public void flush() throws IOException
 	{
 		System.out.println("Flushing");
+		int location = encoder.tell();
+		encoder.seek(0);
+		write((int) size);
+		System.out.println(size);
+		encoder.seek(location);
 		samples.write(destination);
 	}
 	

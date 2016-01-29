@@ -3,8 +3,8 @@ package be.seeseemelk.astega;
 import java.io.File;
 import java.io.IOException;
 
-import be.seeseemelk.astega.encoders.AstegaEncoder;
-import be.seeseemelk.astega.encoders.BitEncoder;
+import be.seeseemelk.astega.coders.AstegaEncoder;
+import be.seeseemelk.astega.coders.BitCoder;
 import be.seeseemelk.astega.stream.AstegaOutputStream;
 
 public class AstegaApp
@@ -20,7 +20,7 @@ public class AstegaApp
 		try
 		{
 			//WaveReader wave = new WaveReader(inputFile);
-			AstegaEncoder encoder = new BitEncoder();
+			AstegaEncoder encoder = new BitCoder();
 			AstegaOutputStream out = new AstegaOutputStream(encoder, inputFile, outputFile);
 			System.out.println("Size limit: " + out.getSizeLimit() + " bytes");
 			System.out.println("Encoding data...");

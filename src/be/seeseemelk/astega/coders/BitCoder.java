@@ -1,8 +1,8 @@
-package be.seeseemelk.astega.encoders;
+package be.seeseemelk.astega.coders;
 
 import be.seeseemelk.astega.AstegaSample;
 
-public class BitEncoder implements AstegaEncoder
+public class BitCoder implements AstegaEncoder, AstegaDecoder
 {
 	private int index = 0;
 	private int lastIndex;
@@ -19,6 +19,18 @@ public class BitEncoder implements AstegaEncoder
 	public int getSizeLimit()
 	{
 		return lastIndex; 
+	}
+	
+	@Override
+	public void seek(int b)
+	{
+		index = b;
+	}
+
+	@Override
+	public int tell()
+	{
+		return index;
 	}
 	
 	/*private void writeBit(int b)
@@ -71,6 +83,18 @@ public class BitEncoder implements AstegaEncoder
 		sample = (sample & 0xFFF80000) | (b & 0xFF);
 		samples.setRawSample(index, sample);
 		index++;
+	}
+	
+	@Override
+	public byte read()
+	{
+		int sample = samples.getRawSample(index++);
+		
+		if (index < 10)
+			System.out.println("Index: " + (index-1) + ", Read: " + sample);
+		
+		//System.out.println("Index: " + (index-1) + ", Data: " + Integer.toHexString(data));
+		return (byte) (sample & 0xFF);
 	}
 }
 
