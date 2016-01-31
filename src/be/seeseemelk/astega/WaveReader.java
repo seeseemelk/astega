@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class WaveReader implements AutoCloseable
@@ -16,6 +18,7 @@ public class WaveReader implements AutoCloseable
 	private int size;
 	private String format;
 	private Map<String, WaveChunk> chunks = new HashMap<>();
+	private List<WaveChunk> chunksInOrder = new ArrayList<>();
 	private WaveChunk formatChunk;
 	private WaveChunk dataChunk;
 	
@@ -43,17 +46,26 @@ public class WaveReader implements AutoCloseable
 	public void flush(RandomAccessFile channel) throws IOException
 	{
 		channel.seek(0);
-		channel.writeChars(getSignature());
+		writeChars(channel, getSignature());
 		int size = getSize();
 		channel.writeByte(size & 0xFF);
 		channel.writeByte((size >> 8) & 0xFF);
 		channel.writeByte((size >> 16) & 0xFF);
 		channel.writeByte((size >> 24) & 0xFF);
-		channel.writeChars(getFormat());
+		writeChars(channel, getFormat());
 		
-		for (WaveChunk chunk : chunks.values())
+		for (WaveChunk chunk : chunksInOrder)
 		{
 			chunk.flush(channel);
+		}
+	}
+	
+	private void writeChars(RandomAccessFile channel, String string) throws IOException
+	{
+		byte[] text = string.getBytes();
+		for (byte chr : text)
+		{
+			channel.writeByte(chr);
 		}
 	}
 	
@@ -116,6 +128,7 @@ public class WaveReader implements AutoCloseable
 			WaveChunk chunk = new WaveChunk(input, location);
 			System.out.println("Found chunk '" + chunk.getId() + "' (size: " + chunk.getSize() + ")");
 			chunks.put(chunk.getId(), chunk);
+			chunksInOrder.add(chunk);
 			location += 8 + chunk.getSize();
 		}
 	}

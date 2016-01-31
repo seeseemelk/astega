@@ -50,7 +50,7 @@ public class WaveChunk
 	public void flush(RandomAccessFile channel) throws IOException
 	{
 		seek(0);
-		channel.writeChars(getId());
+		writeChars(channel, getId());
 		int size = getSize();
 		channel.writeByte(size & 0xFF);
 		channel.writeByte((size >> 8) & 0xFF);
@@ -58,6 +58,15 @@ public class WaveChunk
 		channel.writeByte((size >> 24) & 0xFF);
 		
 		channel.write(data);
+	}
+	
+	private void writeChars(RandomAccessFile channel, String string) throws IOException
+	{
+		byte[] text = string.getBytes();
+		for (byte chr : text)
+		{
+			channel.writeByte(chr);
+		}
 	}
 
 	public int getLocation()

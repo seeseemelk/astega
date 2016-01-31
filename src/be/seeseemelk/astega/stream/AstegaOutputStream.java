@@ -34,7 +34,7 @@ public class AstegaOutputStream extends OutputStream
 	 */
 	public int getSizeLimit()
 	{
-		return encoder.getSizeLimit();
+		return encoder.getSizeLimit() - 4;
 	}
 	
 	public void seek(int b) throws IOException
