@@ -100,8 +100,8 @@ public class AstegaApp
 					case "decode":
 						if (arg.length > 3)
 						{
-							File input = new File(arg[3]);
-							File output = new File(arg[4]);
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
 							FileOutputStream outputStream = new FileOutputStream(output);
 							app.read(codec, input, outputStream);
 							outputStream.close();
