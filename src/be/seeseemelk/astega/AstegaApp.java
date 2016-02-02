@@ -63,8 +63,8 @@ public class AstegaApp
 		{
 			if (arg.length > 1)
 			{
-				String action = arg[0];
-				String codecName = arg[1]; 
+				String codecName = arg[0];
+				String action = arg[1];
 				
 				AstegaCodec codec;
 				
