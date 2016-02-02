@@ -19,6 +19,7 @@ hs_err_pid*
 target/
 examples/
 *.wav
+*.bin
  
 # OS Files #
 .DS_Store
