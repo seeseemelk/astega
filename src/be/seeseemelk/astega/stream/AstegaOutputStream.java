@@ -37,6 +37,15 @@ public class AstegaOutputStream extends OutputStream
 		return encoder.getSizeLimit() - 4;
 	}
 	
+	/**
+	 * Get the amount of bytes that have already been saved
+	 * @return The amount of bytes that were saved.
+	 */
+	public int getSize()
+	{
+		return size;
+	}
+	
 	public void seek(int b) throws IOException
 	{
 		if (b < 0)
@@ -47,7 +56,7 @@ public class AstegaOutputStream extends OutputStream
 		encoder.seek(b);
 	}
 	
-	public void write(byte b) throws IOException
+	public void writeByte(byte b) throws IOException
 	{
 		if (size >= getSizeLimit())
 			throw new IOException("Reached size limit");
@@ -58,23 +67,28 @@ public class AstegaOutputStream extends OutputStream
 			size++;
 	}
 	
-	public void write(short b) throws IOException
+	public void writeShort(short b) throws IOException
 	{
-		write((byte) b);
-		write((byte) (b >> 8));
+		writeByte((byte) b);
+		writeByte((byte) (b >> 8));
+	}
+	
+	public void writeInt(int b) throws IOException
+	{
+		writeShort((short) b);
+		writeShort((short) (b >> 16));
+	}
+	
+	public void writeLong(long b) throws IOException
+	{
+		writeInt((int) b);
+		writeInt((int) (b >> 32));
 	}
 	
 	@Override
 	public void write(int b) throws IOException
 	{
-		write((short) b);
-		write((short) (b >> 16));
-	}
-	
-	public void write(long b) throws IOException
-	{
-		write((int) b);
-		write((int) (b >> 32));
+		writeByte((byte) b);
 	}
 	
 	@Override
@@ -82,7 +96,7 @@ public class AstegaOutputStream extends OutputStream
 	{
 		int location = encoder.tell();
 		encoder.seek(0);
-		write((int) size);
+		writeInt(getSize());
 		encoder.seek(location);
 		samples.write(destination);
 	}

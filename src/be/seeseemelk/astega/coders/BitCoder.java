@@ -98,7 +98,7 @@ public class BitCoder implements AstegaCodec
 	{
 		int sample = samples.getRawSample(index++);
 		
-		if (index < 10)
+		if (index < 4*10)
 			System.out.println("Index: " + (index-1) + ", Read: " + sample);
 		
 		return (byte) (sample & 0xFF);

@@ -92,8 +92,8 @@ public class AstegaInputStream extends InputStream
 
 	@Override
 	public int read() throws IOException {
-		if (tell() < getSize())
-			return readByte();
+		if (tell() - 4 < getSize())
+			return Byte.toUnsignedInt(readByte());
 		else
 			return -1;
 	}

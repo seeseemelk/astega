@@ -27,6 +27,8 @@ public class AstegaApp
 		while ((read = data.read()) != -1)
 			out.write(read);
 		
+		System.out.println("Amount of bytes encoded: " + out.getSize());
+		
 		out.close();
 		System.out.println("Data encoded!");
 	}
