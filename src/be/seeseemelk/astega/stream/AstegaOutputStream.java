@@ -49,6 +49,9 @@ public class AstegaOutputStream extends OutputStream
 	
 	public void write(byte b) throws IOException
 	{
+		if (size >= getSizeLimit())
+			throw new IOException("Reached size limit");
+		
 		encoder.write(Byte.toUnsignedInt(b));
 		
 		if (encoder.tell() - 1 > size)
@@ -77,11 +80,9 @@ public class AstegaOutputStream extends OutputStream
 	@Override
 	public void flush() throws IOException
 	{
-		System.out.println("Flushing");
 		int location = encoder.tell();
 		encoder.seek(0);
 		write((int) size);
-		System.out.println(size);
 		encoder.seek(location);
 		samples.write(destination);
 	}

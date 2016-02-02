@@ -27,8 +27,8 @@ public class AstegaInputStream extends InputStream
 	}
 	
 	/**
-	 * Get the number of BYTES that can be saved.
-	 * @return The number of BYTES that can be saved.
+	 * Get the number of BYTES that can be read.
+	 * @return The number of BYTES that can be read.
 	 * @throws IOException 
 	 */
 	public int getSize() throws IOException
@@ -52,6 +52,11 @@ public class AstegaInputStream extends InputStream
 			throw new IOException("Cannot seek further than size limit.");
 		
 		decoder.seek(b);
+	}
+	
+	public int tell()
+	{
+		return decoder.tell();
 	}
 	
 	public byte readByte() throws IOException
@@ -87,7 +92,10 @@ public class AstegaInputStream extends InputStream
 
 	@Override
 	public int read() throws IOException {
-		return readByte();
+		if (tell() < getSize())
+			return readByte();
+		else
+			return -1;
 	}
 }
 

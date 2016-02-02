@@ -2,7 +2,7 @@ package be.seeseemelk.astega.coders;
 
 import be.seeseemelk.astega.AstegaSample;
 
-public class BitCoder implements AstegaEncoder, AstegaDecoder
+public class BitCoder implements AstegaCodec
 {
 	private int index = 0;
 	private int lastIndex;
@@ -79,19 +79,6 @@ public class BitCoder implements AstegaEncoder, AstegaDecoder
 	@Override
 	public void write(int b)
 	{
-		/*writeNibble(b);
-		writeNibble(b >> 4);*/
-		
-		/*float sample = samples.getRawSample(index);
-		
-		int data = Float.floatToRawIntBits(sample);
-		data = (data & 0xFFF80000) | (b & 0xFF);
-		
-		sample = Float.intBitsToFloat(data);
-		
-		samples.setRawSample(index, sample);
-		index++;*/
-		
 		if (DATA_BITS == 8)
 		{
 			int sample = samples.getRawSample(index);
@@ -114,7 +101,6 @@ public class BitCoder implements AstegaEncoder, AstegaDecoder
 		if (index < 10)
 			System.out.println("Index: " + (index-1) + ", Read: " + sample);
 		
-		//System.out.println("Index: " + (index-1) + ", Data: " + Integer.toHexString(data));
 		return (byte) (sample & 0xFF);
 	}
 }
