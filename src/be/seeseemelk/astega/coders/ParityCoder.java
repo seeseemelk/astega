@@ -115,8 +115,6 @@ public class ParityCoder implements AstegaCodec
 	public int readBit()
 	{
 		int sample = samples.getRawSample(index);
-		if (index < 40)
-			System.out.println("Index: " + index + " value: " + sample);
 		index++;
 		return hasEvenParity(sample) == true ? 1 : 0;
 	}
