@@ -7,7 +7,15 @@ public class BitCoder implements AstegaCodec
 	private int index = 0;
 	private int lastIndex;
 	private AstegaSample samples;
-	private int DATA_BITS = 8;
+	private int DATA_BITS;
+	
+	public BitCoder(int dataBits)
+	{
+		if (dataBits == 8 || dataBits == 4 || dataBits == 2 || dataBits == 1)
+			DATA_BITS = dataBits;
+		else
+			throw new RuntimeException("Invalid number of data bits");
+	}
 	
 	@Override
 	public void setSamples(AstegaSample samples)

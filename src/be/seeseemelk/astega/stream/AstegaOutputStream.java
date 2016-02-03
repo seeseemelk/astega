@@ -98,7 +98,9 @@ public class AstegaOutputStream extends OutputStream
 		encoder.seek(0);
 		writeInt(getSize());
 		encoder.seek(location);
-		samples.write(destination);
+		
+		if (destination != null)
+			samples.write(destination);
 	}
 	
 	@Override

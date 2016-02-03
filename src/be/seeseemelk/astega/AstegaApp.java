@@ -48,14 +48,29 @@ public class AstegaApp
 		System.out.println("Data decoded");
 	}
 	
+	public void size(AstegaEncoder encoder, File input) throws IOException
+	{
+		AstegaOutputStream out = new AstegaOutputStream(encoder, input, null);
+		int maxsize = out.getSizeLimit();
+		System.out.println("Maximum size: " + maxsize + " bytes");
+		System.out.println("Maximum size: " + (int) (maxsize / 1024) + " kilobytes");
+		System.out.println("Maximum size: " + (int) (maxsize / 1024 / 1024) + " megabytes");
+		System.out.println("Currently saved size: " + out.getSize());
+		out.close();
+	}
+	
 	public static void printUsage()
 	{
 		System.out.println("Usage: astega <codec> <action>\n");
 		System.out.println("Actions:");
-		System.out.println("encode <data> <input> <output>");
-		System.out.println("decode <input> <output>");
+		System.out.println("encode <data> <cover> <output>");
+		System.out.println("decode <cover> <output>");
+		System.out.println("info <cover>");
 		System.out.println("\nAvailable codecs:");
-		System.out.println("bit: Saves data in lowest significant bits");
+		System.out.println("bit8: Saves data in lowest significant bits");
+		System.out.println("bit4: Saves data in lowest significant bits");
+		System.out.println("bit2: Saves data in lowest significant bits");
+		System.out.println("bit1: Saves data in lowest significant bits");
 	}
 	
 	
@@ -73,8 +88,17 @@ public class AstegaApp
 				// Get the right codec
 				switch (codecName)
 				{
-					case "bit":
-						codec = new BitCoder();
+					case "bit8":
+						codec = new BitCoder(8);
+						break;
+					case "bit4":
+						codec = new BitCoder(4);
+						break;
+					case "bit2":
+						codec = new BitCoder(2);
+						break;
+					case "bit1":
+						codec = new BitCoder(1);
 						break;
 					default:
 						printUsage();
@@ -107,6 +131,15 @@ public class AstegaApp
 							FileOutputStream outputStream = new FileOutputStream(output);
 							app.read(codec, input, outputStream);
 							outputStream.close();
+						}
+						else
+							printUsage();
+						break;
+					case "info":
+						if (arg.length > 2)
+						{
+							File input = new File(arg[2]);
+							app.size(codec, input);
 						}
 						else
 							printUsage();
