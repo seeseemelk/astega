@@ -12,6 +12,7 @@ import be.seeseemelk.astega.coders.AstegaCodec;
 import be.seeseemelk.astega.coders.AstegaDecoder;
 import be.seeseemelk.astega.coders.AstegaEncoder;
 import be.seeseemelk.astega.coders.BitCoder;
+import be.seeseemelk.astega.coders.ParityCoder;
 import be.seeseemelk.astega.stream.AstegaInputStream;
 import be.seeseemelk.astega.stream.AstegaOutputStream;
 
@@ -71,6 +72,7 @@ public class AstegaApp
 		System.out.println("bit4: Saves data in lowest significant bits");
 		System.out.println("bit2: Saves data in lowest significant bits");
 		System.out.println("bit1: Saves data in lowest significant bits");
+		System.out.println("parity: Saves data using parity coding");
 	}
 	
 	
@@ -99,6 +101,9 @@ public class AstegaApp
 						break;
 					case "bit1":
 						codec = new BitCoder(1);
+						break;
+					case "parity":
+						codec = new ParityCoder();
 						break;
 					default:
 						printUsage();

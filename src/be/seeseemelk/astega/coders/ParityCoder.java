@@ -2,19 +2,19 @@ package be.seeseemelk.astega.coders;
 
 import be.seeseemelk.astega.AstegaSample;
 
-public class BitCoder implements AstegaCodec
+public class ParityCoder implements AstegaCodec
 {
 	private int index = 0;
 	private int lastIndex;
 	private AstegaSample samples;
-	private int DATA_BITS;
+	private int DATA_BITS = 1;
 	
-	public BitCoder(int dataBits)
+	public ParityCoder()
 	{
-		if (dataBits == 8 || dataBits == 4 || dataBits == 2 || dataBits == 1)
+		/*if (dataBits == 8 || dataBits == 4 || dataBits == 2 || dataBits == 1)
 			DATA_BITS = dataBits;
 		else
-			throw new RuntimeException("Invalid number of data bits");
+			throw new RuntimeException("Invalid number of data bits");*/
 	}
 	
 	@Override
@@ -44,11 +44,19 @@ public class BitCoder implements AstegaCodec
 		return index / (8 / DATA_BITS);
 	}
 	
+	private boolean hasEvenParity(int sample)
+	{
+		return Integer.bitCount(sample) % 2 == 0;
+	}
+	
 	private void writeBit(int b)
 	{
 		b &= 0b1;
 		int sample = samples.getRawSample(index);
-		sample = (sample & 0xFFFFFFFE) | (b & 1);
+		
+		if (hasEvenParity(sample) != (b == 1))
+			sample ^= 1;
+		
 		samples.setRawSample(index, sample);
 		index++;
 	}
@@ -65,7 +73,7 @@ public class BitCoder implements AstegaCodec
 		}
 		else
 		{
-			writeBit(b);
+			writeBit(b & 1);
 			writeBit(b >> 1);
 		}
 	}
@@ -82,7 +90,7 @@ public class BitCoder implements AstegaCodec
 		}
 		else
 		{
-			writeHalfNibble(b);
+			writeHalfNibble(b & 0b11);
 			writeHalfNibble(b >> 2);
 		}
 	}
@@ -104,11 +112,54 @@ public class BitCoder implements AstegaCodec
 		}
 	}
 	
+	public int readBit()
+	{
+		int sample = samples.getRawSample(index);
+		if (index < 40)
+			System.out.println("Index: " + index + " value: " + sample);
+		index++;
+		return hasEvenParity(sample) == true ? 1 : 0;
+	}
+	
+	public int readHalfNibble()
+	{
+		int low = readBit();
+		int high = readBit();
+		return (low) | (high << 1);
+	}
+	
+	public int readNibble()
+	{
+		int low = readHalfNibble();
+		int high = readHalfNibble();
+		return (low) | (high << 2);
+	}
+	
+	public int readByte()
+	{
+		int low = readNibble();
+		int high = readNibble();
+		return (low) | (high << 4);
+	}
+	
+	public int readShort()
+	{
+		int low = readNibble();
+		int high = readNibble();
+		return (low) | (high << 8);
+	}
+	
+	public int readInt()
+	{
+		int low = readNibble();
+		int high = readNibble();
+		return (low) | (high << 16);
+	}
+	
 	@Override
 	public byte read()
 	{
-		int sample = samples.getRawSample(index++);
-		return (byte) (sample & 0xFF);
+		return (byte) readByte();
 	}
 }
 
