@@ -22,6 +22,11 @@ public class WaveReader implements AutoCloseable
 	private WaveChunk formatChunk;
 	private WaveChunk dataChunk;
 	
+	/**
+	 * Open an existing file for reading and writing
+	 * @param file
+	 * @throws IOException
+	 */
 	public WaveReader(File file) throws IOException
 	{
 		this.file = file;
@@ -41,6 +46,47 @@ public class WaveReader implements AutoCloseable
 		
 		if (getAudioFormat() != 1)
 			throw new IOException("Unsupported audio format");
+	}
+	
+	public WaveReader(File file, int numchannels, int samplerate, int bitspersample, int samples) throws IOException
+	{
+		this.file = file;
+		input = new RandomAccessFile(file, "rw");
+		
+		signature = "RIFF";
+		input.write(signature.getBytes());
+		
+		int datachunksize = samples * numchannels * bitspersample/8;
+		
+		size = 36 + datachunksize; // TODO Calculate this value
+		input.writeInt(size);
+		
+		format = "WAVE";
+		input.write(format.getBytes());
+		
+		WaveChunk fmt = new WaveChunk(input, 12, "fmt ", 16);
+		chunks.put("fmt ", fmt);
+		chunksInOrder.add(fmt);
+		fmt.write(8-8, (short) 1);
+		fmt.write(10-8, (short) numchannels);
+		fmt.write(12-8, (int) samplerate);
+		fmt.write(16-8, (int) (samplerate * numchannels * bitspersample / 8));
+		fmt.write(20-8, (short) (numchannels * bitspersample / 8));
+		fmt.write(22-8, (short) bitspersample);
+		
+		WaveChunk data = new WaveChunk(input, 36, "data", samples/numchannels);
+		chunks.put("data", data);
+		chunksInOrder.add(data);
+					
+		flush();
+		
+		formatChunk = fmt;
+		dataChunk = data;
+	}
+	
+	public WaveReader(File file, int numchannels, int samplerate, int bitspersample) throws IOException
+	{
+		this(file, numchannels, samplerate, bitspersample, 0);
 	}
 	
 	public void flush(RandomAccessFile channel) throws IOException
@@ -198,14 +244,14 @@ public class WaveReader implements AutoCloseable
 		switch (getBitsPerSample())
 		{
 			case 8:
-				return (int) dataChunk.readByte(index);
+				return Byte.toUnsignedInt(dataChunk.readByte(index));
 			case 16:
 				index *= 2;
-				return (int) dataChunk.readShort(index);
+				return Short.toUnsignedInt(dataChunk.readShort(index));
 			case 24:
 				index *= 3;
-				int low = dataChunk.readShort(index);
-				int high = dataChunk.readByte(index + 2) << 16;
+				int low = Short.toUnsignedInt(dataChunk.readShort(index));
+				int high = Byte.toUnsignedInt(dataChunk.readByte(index + 2)) << 16;
 				return (low | high);
 			case 32:
 				index *= 4;

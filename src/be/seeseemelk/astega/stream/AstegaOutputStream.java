@@ -23,6 +23,15 @@ public class AstegaOutputStream extends OutputStream
 		encoder.seek(4);
 	}
 	
+	public AstegaOutputStream(AstegaEncoder encoder, File source, File destination, int size) throws IOException
+	{
+		this.destination = destination;
+		samples = new AstegaSample(source, 1, 44100, 16, size);
+		this.encoder = encoder;
+		encoder.setSamples(samples);
+		encoder.seek(4);
+	}
+	
 	public AstegaSample getSamples()
 	{
 		return samples;

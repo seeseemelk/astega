@@ -13,6 +13,12 @@ public class WaveChunk
 	private int size;
 	private byte[] data;
 	
+	/**
+	 * Read a chunk from a file
+	 * @param channel
+	 * @param location
+	 * @throws IOException
+	 */
 	public WaveChunk(RandomAccessFile channel, int location) throws IOException
 	{
 		this.channel = channel;
@@ -24,6 +30,36 @@ public class WaveChunk
 		seek(8);
 		data = new byte[getSize()];
 		channel.readFully(data);
+	}
+	
+	/**
+	 * Create a new chunk to a file
+	 * @param channel
+	 * @param location
+	 * @param name
+	 * @throws IOException
+	 */
+	public WaveChunk(RandomAccessFile channel, int location, String name, int size) throws IOException
+	{
+		this.channel = channel;
+		this.location = location;
+		
+		id = name;
+		this.size = size;
+		
+		data = new byte[getSize()];
+	}
+	
+	/**
+	 * Create a new chunk to a file
+	 * @param channel
+	 * @param location
+	 * @param name
+	 * @throws IOException
+	 */
+	public WaveChunk(RandomAccessFile channel, int location, String name) throws IOException
+	{
+		this(channel, location, name, 0);
 	}
 	
 	private String readId() throws IOException
@@ -110,6 +146,13 @@ public class WaveChunk
 
 	public void write(int index, byte value)
 	{
+		if (index >= data.length)
+		{
+			byte[] newdata = new byte[index+1];
+			for (int i = 0; i < data.length; i++)
+				newdata[i] = data[i];
+			data = newdata;
+		}
 		data[index] = value;
 	}
 	

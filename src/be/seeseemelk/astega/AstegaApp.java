@@ -12,6 +12,7 @@ import be.seeseemelk.astega.coders.AstegaCodec;
 import be.seeseemelk.astega.coders.AstegaDecoder;
 import be.seeseemelk.astega.coders.AstegaEncoder;
 import be.seeseemelk.astega.coders.BitCoder;
+import be.seeseemelk.astega.coders.NullCoder;
 import be.seeseemelk.astega.coders.ParityCoder;
 import be.seeseemelk.astega.stream.AstegaInputStream;
 import be.seeseemelk.astega.stream.AstegaOutputStream;
@@ -60,19 +61,38 @@ public class AstegaApp
 		out.close();
 	}
 	
+	public void createSine(File output) throws IOException
+	{
+		int length = 44100 * 10;
+		AstegaSample out = new AstegaSample(output, 1, 44100, 16, length);
+		for (int i = 0; i < length; i++)
+		{
+			double x = (double) i;
+			double y = (Math.sin(x / 20.0) + 1.0) * Math.pow(2.0, 15);
+			
+			int value = (int) y;
+			
+			out.setRawSample(i, value);
+		}
+		out.write(output);
+	}
+	
 	public static void printUsage()
 	{
 		System.out.println("Usage: astega <codec> <action>\n");
 		System.out.println("Actions:");
-		System.out.println("encode <data> <cover> <output>");
-		System.out.println("decode <cover> <output>");
-		System.out.println("info <cover>");
+		System.out.println("encode <data> <cover> <output>     Encode data in a cover file");
+		System.out.println("decode <cover> <output>            Decode data from a file");
+		System.out.println("info <cover>                       Get information from a file");
+		System.out.println("sine <output>                      Create a sine wave");
+		System.out.println("img2wav <input> <output>           Convert an image file to an audio file");
 		System.out.println("\nAvailable codecs:");
 		System.out.println("bit8: Saves data in lowest significant bits");
 		System.out.println("bit4: Saves data in lowest significant bits");
 		System.out.println("bit2: Saves data in lowest significant bits");
 		System.out.println("bit1: Saves data in lowest significant bits");
 		System.out.println("parity: Saves data using parity coding");
+		System.out.println("null: Truncates samples and stores a byte in each sample");
 	}
 	
 	
@@ -104,6 +124,9 @@ public class AstegaApp
 						break;
 					case "parity":
 						codec = new ParityCoder();
+						break;
+					case "null":
+						codec = new NullCoder();
 						break;
 					default:
 						printUsage();
@@ -145,6 +168,35 @@ public class AstegaApp
 						{
 							File input = new File(arg[2]);
 							app.size(codec, input);
+						}
+						else
+							printUsage();
+						break;
+					case "sine":
+						if (arg.length > 1)
+						{
+							File output = new File(arg[1]);
+							app.createSine(output);
+						}
+						else
+							printUsage();
+						break;
+					case "img2wav":
+						if (arg.length > 2)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							Convertor.convertImageToAudio(input, output, true);
+						}
+						else
+							printUsage();
+						break;
+					case "wav2img":
+						if (arg.length > 2)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							Convertor.convertAudioToImage(input, output, true);
 						}
 						else
 							printUsage();
