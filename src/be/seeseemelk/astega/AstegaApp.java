@@ -86,7 +86,7 @@ public class AstegaApp
 		System.out.println("info <cover>                       Get information from a file");
 		System.out.println("sine <output>                      Create a sine wave");
 		System.out.println("img2wav <input> <output>           Convert an image file to an audio file");
-		System.out.println("wav2img <input> <output>           Convert an audio file back to an image");
+		System.out.println("wav2img <input> <output> [width height] Convert an audio file back to an image");
 		System.out.println("\nAvailable codecs:");
 		System.out.println("bit8: Saves data in lowest significant bits");
 		System.out.println("bit4: Saves data in lowest significant bits");
@@ -193,7 +193,15 @@ public class AstegaApp
 							printUsage();
 						break;
 					case "wav2img":
-						if (arg.length > 2)
+						if (arg.length > 4)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							int width = Integer.parseInt(arg[4]);
+							int height = Integer.parseInt(arg[5]);
+							Convertor.convertAudioToImage(input, output, width, height, true);
+						}
+						else if (arg.length > 2)
 						{
 							File input = new File(arg[2]);
 							File output = new File(arg[3]);
@@ -229,7 +237,6 @@ public class AstegaApp
 		}
 	}
 }
-
 
 
 

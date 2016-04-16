@@ -172,7 +172,7 @@ public class WaveReader implements AutoCloseable
 		while (location <= maxLocation)
 		{
 			WaveChunk chunk = new WaveChunk(input, location);
-			System.out.println("Found chunk '" + chunk.getId() + "' (size: " + chunk.getSize() + ")");
+			//System.out.println("Found chunk '" + chunk.getId() + "' (size: " + chunk.getSize() + ")");
 			chunks.put(chunk.getId(), chunk);
 			chunksInOrder.add(chunk);
 			location += 8 + chunk.getSize();

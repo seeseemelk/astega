@@ -50,14 +50,15 @@ public class Convertor
 		out.write(audiofile);
 	}
 	
-	public static void convertAudioToImage(File audiofile, File imagefile, boolean singleChannel) throws IOException
+	public static void convertAudioToImage(File audiofile, File imagefile, int width, int height, boolean singleChannel) throws IOException
 	{
 		AstegaSample in = new AstegaSample(audiofile);
 		
-		int width = in.getRawSample(0) | (in.getRawSample(1) << 8) | (in.getRawSample(2) << 16) | (in.getRawSample(3) << 24);
-		int height = in.getRawSample(4) | (in.getRawSample(5) << 8) | (in.getRawSample(6) << 16) | (in.getRawSample(7) << 24);
+		if (width < 0)
+			width = in.getRawSample(0) | (in.getRawSample(1) << 8) | (in.getRawSample(2) << 16) | (in.getRawSample(3) << 24);
 		
-		System.out.println(width + "*" + height);
+		if (height < 0)
+			height = in.getRawSample(4) | (in.getRawSample(5) << 8) | (in.getRawSample(6) << 16) | (in.getRawSample(7) << 24);
 		
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		
@@ -78,5 +79,10 @@ public class Convertor
 		
 		image.setRGB(0, 0, width, height, data, 0, width);
 		ImageIO.write(image, "png", imagefile);
+	}
+	
+	public static void convertAudioToImage(File audiofile, File imagefile, boolean singleChannel) throws IOException
+	{
+		convertAudioToImage(audiofile, imagefile, -1, -1, singleChannel);
 	}
 }
