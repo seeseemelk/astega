@@ -68,7 +68,7 @@ public class AstegaApp
 		for (int i = 0; i < length; i++)
 		{
 			double x = (double) i;
-			double y = (Math.sin(x / 20.0) + 1.0) * Math.pow(2.0, 15);
+			double y = (Math.sin(x / 20.0)) * Math.pow(2.0, 15);
 			
 			int value = (int) y;
 			
@@ -85,8 +85,10 @@ public class AstegaApp
 		System.out.println("decode <cover> <output>            Decode data from a file");
 		System.out.println("info <cover>                       Get information from a file");
 		System.out.println("sine <output>                      Create a sine wave");
-		System.out.println("img2wav <input> <output>           Convert an image file to an audio file");
-		System.out.println("wav2img <input> <output> [width height] Convert an audio file back to an image");
+		System.out.println("img2ewav <input> <output>          Convert an image file to an encoded audio file");
+		System.out.println("ewav2img <input> <output> [width height] Convert an encoded audio file back to an image");
+		System.out.println("wav2eimg <input> <output>          Convert an audio file to an encoded image");
+		System.out.println("eimg2wav <input> <output>          Convert an encoded image file to an audio file");
 		System.out.println("\nAvailable codecs:");
 		System.out.println("bit8: Saves data in lowest significant bits");
 		System.out.println("bit4: Saves data in lowest significant bits");
@@ -174,38 +176,58 @@ public class AstegaApp
 							printUsage();
 						break;
 					case "sine":
-						if (arg.length > 1)
+						if (arg.length > 2)
 						{
-							File output = new File(arg[1]);
+							File output = new File(arg[2]);
 							app.createSine(output);
 						}
 						else
 							printUsage();
 						break;
-					case "img2wav":
-						if (arg.length > 2)
+					case "img2ewav":
+						if (arg.length > 3)
 						{
 							File input = new File(arg[2]);
 							File output = new File(arg[3]);
-							Convertor.convertImageToAudio(input, output, true);
+							Convertor.convertImageToEncodedAudio(input, output, true);
 						}
 						else
 							printUsage();
 						break;
-					case "wav2img":
-						if (arg.length > 4)
+					case "ewav2img":
+						if (arg.length > 5)
 						{
 							File input = new File(arg[2]);
 							File output = new File(arg[3]);
 							int width = Integer.parseInt(arg[4]);
 							int height = Integer.parseInt(arg[5]);
-							Convertor.convertAudioToImage(input, output, width, height, true);
+							Convertor.convertEncodedAudioToImage(input, output, width, height, true);
 						}
-						else if (arg.length > 2)
+						else if (arg.length > 3)
 						{
 							File input = new File(arg[2]);
 							File output = new File(arg[3]);
-							Convertor.convertAudioToImage(input, output, true);
+							Convertor.convertEncodedAudioToImage(input, output, true);
+						}
+						else
+							printUsage();
+						break;
+					case "wav2eimg":
+						if (arg.length > 3)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							Convertor.convertAudioToEncodedImage(input, output);
+						}
+						else
+							printUsage();
+						break;
+					case "eimg2wav":
+						if (arg.length > 3)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							Convertor.convertEncodedImageToAudio(input, output);
 						}
 						else
 							printUsage();

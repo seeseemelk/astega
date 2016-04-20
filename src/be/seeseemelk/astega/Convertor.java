@@ -8,7 +8,7 @@ import javax.imageio.ImageIO;
 
 public class Convertor
 {
-	public static void convertImageToAudio(File imagefile, File audiofile, boolean singleChannel) throws IOException
+	public static void convertImageToEncodedAudio(File imagefile, File audiofile, boolean singleChannel) throws IOException
 	{
 		BufferedImage image = ImageIO.read(imagefile);
 		
@@ -50,7 +50,7 @@ public class Convertor
 		out.write(audiofile);
 	}
 	
-	public static void convertAudioToImage(File audiofile, File imagefile, int width, int height, boolean singleChannel) throws IOException
+	public static void convertEncodedAudioToImage(File audiofile, File imagefile, int width, int height, boolean singleChannel) throws IOException
 	{
 		AstegaSample in = new AstegaSample(audiofile);
 		
@@ -81,8 +81,178 @@ public class Convertor
 		ImageIO.write(image, "png", imagefile);
 	}
 	
-	public static void convertAudioToImage(File audiofile, File imagefile, boolean singleChannel) throws IOException
+	public static void convertEncodedAudioToImage(File audiofile, File imagefile, boolean singleChannel) throws IOException
 	{
-		convertAudioToImage(audiofile, imagefile, -1, -1, singleChannel);
+		convertEncodedAudioToImage(audiofile, imagefile, -1, -1, singleChannel);
+	}
+	
+	private static int encImageSetDataByte(int[] data, int index, int value)
+	{
+		value = value & 0xFF;
+		
+		int pixelnum = index / 3;
+		int channelnum = index % 3;
+		
+		int color = data[pixelnum];
+		int shift = 8 * channelnum;
+		int mask = 255 << shift;
+		color = (color & ~mask) | (value << shift);
+		
+		data[pixelnum] = color;
+		
+		return index+1;
+	}
+	
+	private static int encImageSetDataShort(int[] data, int index, int value)
+	{
+		index = encImageSetDataByte(data, index, value);
+		index = encImageSetDataByte(data, index, (value >> 8));
+		return index;
+	}
+	
+	private static int encImageSetDataInt(int[] data, int index, int value)
+	{
+		index = encImageSetDataShort(data, index, value);
+		index = encImageSetDataShort(data, index, (value >> 16));
+		return index;
+	}
+	
+	public static void convertAudioToEncodedImage(File audiofile, File imagefile) throws IOException
+	{
+		AstegaSample in = new AstegaSample(audiofile);
+		
+		int numsamples = in.getNumberOfSamples();
+		int bytespersample = in.getBitsPerSample() / 8;
+		int numbytes = numsamples * bytespersample + 16;
+		
+		double side = Math.ceil(Math.sqrt(Math.ceil((double)(numbytes)/3)));
+		int width = (int) side;
+		int height = (int) side;
+		
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		
+		int[] data = new int[width * height];
+		image.getRGB(0, 0, width, height, data, 0, width);
+		
+		int ii = 0;
+		
+		ii = encImageSetDataInt(data, ii, numsamples);
+		ii = encImageSetDataInt(data, ii, in.getNumberOfChannels());
+		ii = encImageSetDataInt(data, ii, in.getBitsPerSample());
+		ii = encImageSetDataInt(data, ii, in.getSamplerate());
+				
+		for (int i = 0; i < numsamples; i++)
+		{
+			int sample = in.getRawSample(i);
+			if (bytespersample >= 1)
+				ii = encImageSetDataByte(data, ii, sample);
+			if (bytespersample >= 2)
+				ii = encImageSetDataByte(data, ii, sample>>8);
+			if (bytespersample >= 3)
+				ii = encImageSetDataByte(data, ii, sample>>16);
+			if (bytespersample >= 4)
+				ii = encImageSetDataByte(data, ii, sample>>24);
+		}
+		
+		int area = width * height * 3;
+		System.out.println("Need to fill " + (area-numbytes) + " bytes");
+		for (int i = numbytes; i < area; i++)
+		{
+			ii = encImageSetDataByte(data, ii, data[i-numbytes]);
+			//ii = encImageSetDataByte(data, ii, 0xFF0000);
+		}
+		
+		image.setRGB(0, 0, width, height, data, 0, width);
+		ImageIO.write(image, "png", imagefile);
+	}
+	
+	private static int encImageReadByte(int[] data, int index)
+	{
+		int pixelnum = index / 3;
+		int channelnum = index % 3;
+		
+		int color = data[pixelnum];
+		int shift = 8 * channelnum;
+		int mask = 255 << shift;
+		int value = (color & mask) >> shift;
+		
+		return value;
+	}
+	
+	private static int encImageReadShort(int[] data, int index)
+	{
+		int value = encImageReadByte(data, index);
+		value |= encImageReadByte(data, index+1) << 8;
+		return value;
+	}
+	
+	private static int encImageReadInt(int[] data, int index)
+	{
+		int value = encImageReadShort(data, index);
+		value |= encImageReadShort(data, index+2) << 16;
+		return value;
+	}
+	
+	public static void convertEncodedImageToAudio(File imagefile, File audiofile) throws IOException
+	{
+		BufferedImage image = ImageIO.read(imagefile);
+		
+		int datasize = image.getWidth() * image.getHeight();
+		
+		int[] data = new int[datasize]; 
+		image.getRGB(0, 0, image.getWidth(), image.getHeight(), data, 0, image.getWidth());
+		
+		int ii = 0;
+		
+		int numsamples = encImageReadInt(data, ii); ii+=4;
+		int numchannels = encImageReadInt(data, ii); ii+=4;
+		int bitspersample = encImageReadInt(data, ii); ii+=4;
+		int bytespersample = bitspersample/8;
+		int samplerate = encImageReadInt(data, ii); ii+=4;
+		int encodeddatasize = numsamples*bytespersample + 16;
+		
+		//System.out.println("Number of samples: " + numsamples);
+		
+		AstegaSample out = new AstegaSample(audiofile, numchannels, samplerate, bitspersample, numsamples/numchannels);
+		
+		int ai = 0;
+		for (int i = ii; i < encodeddatasize; i++)
+		{
+			int sample = 0;
+			sample = encImageReadByte(data, i);
+			if (bytespersample > 1)
+				sample |= encImageReadByte(data, ++i) << 8;
+			if (bytespersample > 2)
+				sample |= encImageReadByte(data, ++i) << 16;
+			if (bytespersample > 3)
+				sample |= encImageReadByte(data, ++i) << 24;
+			out.setRawSample(ai++, sample);
+			if ((i % 100) == 0)
+				System.out.println((double)i/encodeddatasize*100);
+		}
+		
+		out.write(audiofile);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

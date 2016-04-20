@@ -70,6 +70,11 @@ public class AstegaSample
 	{
 		return wave.getBitsPerSample();
 	}
+
+	public int getSamplerate()
+	{
+		return wave.getSampleRate();
+	}
 }
 
 

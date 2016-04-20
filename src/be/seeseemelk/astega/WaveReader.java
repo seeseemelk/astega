@@ -74,7 +74,7 @@ public class WaveReader implements AutoCloseable
 		fmt.write(20-8, (short) (numchannels * bitspersample / 8));
 		fmt.write(22-8, (short) bitspersample);
 		
-		WaveChunk data = new WaveChunk(input, 36, "data", samples/numchannels);
+		WaveChunk data = new WaveChunk(input, 36, "data", samples*numchannels*(bitspersample/8));
 		chunks.put("data", data);
 		chunksInOrder.add(data);
 					
