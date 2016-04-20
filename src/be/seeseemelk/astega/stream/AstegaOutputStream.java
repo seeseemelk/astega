@@ -67,7 +67,7 @@ public class AstegaOutputStream extends OutputStream
 	
 	public void writeByte(byte b) throws IOException
 	{
-		if (size >= getSizeLimit())
+		if (size > getSizeLimit())
 			throw new IOException("Reached size limit");
 		
 		encoder.write(Byte.toUnsignedInt(b));

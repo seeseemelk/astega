@@ -7,11 +7,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import be.seeseemelk.astega.coders.AstegaCodec;
 import be.seeseemelk.astega.coders.AstegaDecoder;
 import be.seeseemelk.astega.coders.AstegaEncoder;
-import be.seeseemelk.astega.coders.BitCoder;
+import be.seeseemelk.astega.coders.BitCoder1;
+import be.seeseemelk.astega.coders.BitCoder2;
+import be.seeseemelk.astega.coders.BitCoder4;
+import be.seeseemelk.astega.coders.BitCoder8;
 import be.seeseemelk.astega.coders.NullCoder;
 import be.seeseemelk.astega.coders.ParityCoder;
 import be.seeseemelk.astega.stream.AstegaInputStream;
@@ -77,6 +83,56 @@ public class AstegaApp
 		out.write(output);
 	}
 	
+	private void doTest(Tester tester, AstegaCodec codec, byte[] data, double noiserate, Map<Class<? extends AstegaCodec>, Integer> read, Map<Class<? extends AstegaCodec>, Integer> bad) throws IOException
+	{
+		System.out.println("Performing test with " + codec.getClass().getSimpleName());
+		tester.setCodecs(codec, codec);
+		tester.test(data, noiserate);
+		
+		if (read != null)
+		{
+			read.put(codec.getClass(), tester.getAmountReadInTest());
+			bad.put(codec.getClass(), tester.getAmountBadReadInTest());
+		}
+	}
+	
+	public void test(AstegaCodec codec, File input, File output, double noiserate) throws IOException
+	{
+		Tester tester = new Tester(input, output);
+		System.out.println("Generating sample waveform");
+		int datalength = tester.createSampleCoverFile();
+		System.out.println("Generating sample data");
+		byte[] data = tester.createSampleData(datalength);
+		
+		if (codec instanceof NullCoder)
+		{
+			Map<Class<? extends AstegaCodec>, Integer> totalread = new HashMap<>();
+			Map<Class<? extends AstegaCodec>, Integer> totalbad = new HashMap<>();
+			
+			doTest(tester, new BitCoder8(), data, noiserate, totalread, totalbad);
+			doTest(tester, new BitCoder4(), data, noiserate, totalread, totalbad);
+			doTest(tester, new BitCoder2(), data, noiserate, totalread, totalbad);
+			doTest(tester, new BitCoder1(), data, noiserate, totalread, totalbad);
+			doTest(tester, new ParityCoder(), data, noiserate, totalread, totalbad);
+			
+			for (Entry<Class<? extends AstegaCodec>, Integer> entry : totalread.entrySet())
+			{
+				int read = entry.getValue();
+				int bad = totalbad.get(entry.getKey());
+				String classname = entry.getKey().getSimpleName();
+				
+				int good = read - bad;
+				int goodpercentage = (int) ((double) good / (double) read * 100.0);
+				
+				System.out.println(classname + ": " + good + "/" + read + " good (" + goodpercentage + "%)");
+			}
+		}
+		else
+		{
+			doTest(tester, codec, data, noiserate, null, null);
+		}
+	}
+	
 	public static void printUsage()
 	{
 		System.out.println("Usage: astega <codec> <action>\n");
@@ -85,6 +141,8 @@ public class AstegaApp
 		System.out.println("decode <cover> <output>            Decode data from a file");
 		System.out.println("info <cover>                       Get information from a file");
 		System.out.println("sine <output>                      Create a sine wave");
+		System.out.println("test <input> <output>              Test an encoding, or all encodings if null is used");
+		System.out.println("noisetest <input> <output> <rate>  Test an encoding with noise added");
 		System.out.println("img2ewav <input> <output>          Convert an image file to an encoded audio file");
 		System.out.println("ewav2img <input> <output> [width height] Convert an encoded audio file back to an image");
 		System.out.println("wav2eimg <input> <output>          Convert an audio file to an encoded image");
@@ -114,16 +172,16 @@ public class AstegaApp
 				switch (codecName)
 				{
 					case "bit8":
-						codec = new BitCoder(8);
+						codec = new BitCoder8();
 						break;
 					case "bit4":
-						codec = new BitCoder(4);
+						codec = new BitCoder4();
 						break;
 					case "bit2":
-						codec = new BitCoder(2);
+						codec = new BitCoder2();
 						break;
 					case "bit1":
-						codec = new BitCoder(1);
+						codec = new BitCoder1();
 						break;
 					case "parity":
 						codec = new ParityCoder();
@@ -180,6 +238,27 @@ public class AstegaApp
 						{
 							File output = new File(arg[2]);
 							app.createSine(output);
+						}
+						else
+							printUsage();
+						break;
+					case "test":
+						if (arg.length > 3)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							app.test(codec, input, output, 0);
+						}
+						else
+							printUsage();
+						break;
+					case "noisetest":
+						if (arg.length > 4)
+						{
+							File input = new File(arg[2]);
+							File output = new File(arg[3]);
+							double noiserate = Double.parseDouble(arg[4]) / 100.0;
+							app.test(codec, input, output, noiserate);
 						}
 						else
 							printUsage();

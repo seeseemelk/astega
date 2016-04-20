@@ -44,6 +44,11 @@ public class BitCoder implements AstegaCodec
 		return index / (8 / DATA_BITS);
 	}
 	
+	public int getDataBits()
+	{
+		return DATA_BITS;
+	}
+	
 	private void writeBit(int b)
 	{
 		b &= 0b1;
@@ -104,11 +109,61 @@ public class BitCoder implements AstegaCodec
 		}
 	}
 	
+	private int readBit()
+	{
+		int bit = samples.getRawSample(index++);
+		return bit & 1;
+	}
+	
+	private int readHalfNibble()
+	{
+		if (DATA_BITS == 2)
+		{
+			int nibble = samples.getRawSample(index++);
+			return nibble & 0b11;
+		}
+		else
+		{
+			int least = readBit();
+			int most = readBit();
+			return (most << 1) | (least);
+		}
+	}
+	
+	private int readNibble()
+	{
+		if (DATA_BITS == 4)
+		{
+			int nibble = samples.getRawSample(index++);
+			return nibble & 0b1111;
+		}
+		else
+		{
+			int least = readHalfNibble();
+			int most = readHalfNibble();
+			return (most << 2) | (least);
+		}
+	}
+	
+	private int readByte()
+	{
+		if (DATA_BITS == 8)
+		{
+			int sample = samples.getRawSample(index++);
+			return (sample & 0xFF);
+		}
+		else
+		{
+			int least = readNibble();
+			int most = readNibble();
+			return (most << 4) | (least);
+		}
+	}
+	
 	@Override
 	public byte read()
 	{
-		int sample = samples.getRawSample(index++);
-		return (byte) (sample & 0xFF);
+		return (byte) readByte();
 	}
 }
 
