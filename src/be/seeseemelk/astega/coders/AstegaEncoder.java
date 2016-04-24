@@ -33,4 +33,10 @@ public interface AstegaEncoder
 	 * @return The next byte to write to
 	 */
 	public int tell();
+	
+	/**
+	 * Gets called right before the data is actually written.
+	 * Can be used to execute certain tasks that are to computational heavy to perform in write() 
+	 */
+	public void flush();
 }

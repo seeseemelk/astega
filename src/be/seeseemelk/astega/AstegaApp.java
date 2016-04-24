@@ -20,6 +20,7 @@ import be.seeseemelk.astega.coders.BitCoder4;
 import be.seeseemelk.astega.coders.BitCoder8;
 import be.seeseemelk.astega.coders.NullCoder;
 import be.seeseemelk.astega.coders.ParityCoder;
+import be.seeseemelk.astega.coders.PhaseCoder;
 import be.seeseemelk.astega.stream.AstegaInputStream;
 import be.seeseemelk.astega.stream.AstegaOutputStream;
 
@@ -75,7 +76,6 @@ public class AstegaApp
 		{
 			double x = (double) i;
 			double y = (Math.sin(x / 20.0)) * Math.pow(2.0, 15);
-			
 			int value = (int) y;
 			
 			out.setRawSample(i, value);
@@ -114,6 +114,7 @@ public class AstegaApp
 			doTest(tester, new BitCoder2(), data, noiserate, totalread, totalbad);
 			doTest(tester, new BitCoder1(), data, noiserate, totalread, totalbad);
 			doTest(tester, new ParityCoder(), data, noiserate, totalread, totalbad);
+			doTest(tester, new PhaseCoder(), data, noiserate, totalread, totalbad);
 			
 			for (Entry<Class<? extends AstegaCodec>, Integer> entry : totalread.entrySet())
 			{
@@ -153,6 +154,7 @@ public class AstegaApp
 		System.out.println("bit2: Saves data in lowest significant bits");
 		System.out.println("bit1: Saves data in lowest significant bits");
 		System.out.println("parity: Saves data using parity coding");
+		System.out.println("phase: Saves data using phase coding");
 		System.out.println("null: Truncates samples and stores a byte in each sample");
 	}
 	
@@ -185,6 +187,9 @@ public class AstegaApp
 						break;
 					case "parity":
 						codec = new ParityCoder();
+						break;
+					case "phase":
+						codec = new PhaseCoder();
 						break;
 					case "null":
 						codec = new NullCoder();
@@ -335,7 +340,9 @@ public class AstegaApp
 		{
 			System.err.println("IO Exception: " + e.getMessage());
 			e.printStackTrace();
+			System.exit(1);
 		}
+		System.exit(0);
 	}
 }
 

@@ -127,16 +127,16 @@ public class WaveChunk
 	
 	public short readShort(int index)
 	{
-		int high = Byte.toUnsignedInt(data[index]);
-		int low = Byte.toUnsignedInt(data[index + 1]) << 8;
-		return (short) (high | low);
+		int low = Byte.toUnsignedInt(data[index]);
+		int high = Byte.toUnsignedInt(data[index + 1]) << 8;
+		return (short) (low | high);
 	}
 	
 	public int readInt(int index)
 	{
-		int high = Short.toUnsignedInt(readShort(index));
-		int low = Short.toUnsignedInt(readShort(index + 2)) << 16;
-		return (int) (high | low);
+		int low = Short.toUnsignedInt(readShort(index));
+		int high = Short.toUnsignedInt(readShort(index + 2)) << 16;
+		return (int) (low | high);
 	}
 	
 	public void read(int index, byte[] dest)
@@ -144,7 +144,7 @@ public class WaveChunk
 		System.arraycopy(data, index, dest, 0, dest.length);
 	}
 
-	public void write(int index, byte value)
+	public void writeByte(int index, int value)
 	{
 		if (index >= data.length)
 		{
@@ -153,19 +153,19 @@ public class WaveChunk
 				newdata[i] = data[i];
 			data = newdata;
 		}
-		data[index] = value;
+		data[index] = (byte) (value & 0xFF);
 	}
 	
-	public void write(int index, short value)
+	public void writeShort(int index, int value)
 	{
-		write(index, (byte) value);
-		write(index+1, (byte) (value >> 8));
+		writeByte(index, value);
+		writeByte(index+1, (value >> 8));
 	}
 	
-	public void write(int index, int value)
+	public void writeInt(int index, int value)
 	{
-		write(index, (short) value);
-		write(index+2, (short) (value >> 16));
+		writeShort(index, value);
+		writeShort(index+2, (value >> 16));
 	}
 }
 

@@ -165,6 +165,12 @@ public class BitCoder implements AstegaCodec
 	{
 		return (byte) readByte();
 	}
+	
+	@Override
+	public void flush()
+	{
+		
+	}
 }
 
 

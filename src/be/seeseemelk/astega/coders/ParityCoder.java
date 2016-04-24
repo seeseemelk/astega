@@ -159,6 +159,12 @@ public class ParityCoder implements AstegaCodec
 	{
 		return (byte) readByte();
 	}
+	
+	@Override
+	public void flush()
+	{
+		
+	}
 }
 
 

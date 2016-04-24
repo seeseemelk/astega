@@ -67,12 +67,12 @@ public class WaveReader implements AutoCloseable
 		WaveChunk fmt = new WaveChunk(input, 12, "fmt ", 16);
 		chunks.put("fmt ", fmt);
 		chunksInOrder.add(fmt);
-		fmt.write(8-8, (short) 1);
-		fmt.write(10-8, (short) numchannels);
-		fmt.write(12-8, (int) samplerate);
-		fmt.write(16-8, (int) (samplerate * numchannels * bitspersample / 8));
-		fmt.write(20-8, (short) (numchannels * bitspersample / 8));
-		fmt.write(22-8, (short) bitspersample);
+		fmt.writeShort(8-8, 1);
+		fmt.writeShort(10-8, numchannels);
+		fmt.writeInt(12-8, samplerate);
+		fmt.writeInt(16-8, (samplerate * numchannels * bitspersample / 8));
+		fmt.writeShort(20-8, (numchannels * bitspersample / 8));
+		fmt.writeShort(22-8, bitspersample);
 		
 		WaveChunk data = new WaveChunk(input, 36, "data", samples*numchannels*(bitspersample/8));
 		chunks.put("data", data);
@@ -246,8 +246,12 @@ public class WaveReader implements AutoCloseable
 			case 8:
 				return Byte.toUnsignedInt(dataChunk.readByte(index));
 			case 16:
+				/*int byte1 = Byte.toUnsignedInt(dataChunk.readByte(index++));
+				int byte2 = Byte.toUnsignedInt(dataChunk.readByte(index++)) << 8;
+				return (byte1 | byte2);*/
 				index *= 2;
-				return Short.toUnsignedInt(dataChunk.readShort(index));
+				//return Short.toUnsignedInt(dataChunk.readShort(index));
+				return (int) dataChunk.readShort(index);
 			case 24:
 				index *= 3;
 				int low = Short.toUnsignedInt(dataChunk.readShort(index));
@@ -263,7 +267,7 @@ public class WaveReader implements AutoCloseable
 	
 	/**
 	 * Writes a sample to the file.
-	 * It will drop any bits that aren't saved in the samples.
+	 * It will drop any bits that don't fit in the bit depth.
 	 * @param index The number of the sample to modify
 	 * @param value The value to save
 	 */
@@ -272,20 +276,20 @@ public class WaveReader implements AutoCloseable
 		switch (getBitsPerSample())
 		{
 			case 8:
-				dataChunk.write(index, (byte) value);
+				dataChunk.writeByte(index, value);
 				break;
 			case 16:
 				index *= 2;
-				dataChunk.write(index, (short) value);
+				dataChunk.writeShort(index, value);
 				break;
 			case 24:
 				index *= 3;
-				dataChunk.write(index, (short) value);
-				dataChunk.write(index+1, (byte) (value >> 16));
+				dataChunk.writeShort(index, value);
+				dataChunk.writeByte(index+1, (value >> 16));
 				break;
 			case 32:
 				index *= 4;
-				dataChunk.write(index, value);
+				dataChunk.writeInt(index, value);
 				break;
 			default:
 				throw new RuntimeException("Cannot work with " + getBitsPerSample() + " bits per sample.");

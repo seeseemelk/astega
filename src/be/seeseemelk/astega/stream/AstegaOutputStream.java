@@ -16,6 +16,9 @@ public class AstegaOutputStream extends OutputStream
 	
 	public AstegaOutputStream(AstegaEncoder encoder, File source, File destination) throws IOException
 	{
+		if (destination.exists())
+			destination.delete();
+		
 		this.destination = destination;
 		samples = new AstegaSample(source);
 		this.encoder = encoder;
@@ -25,6 +28,9 @@ public class AstegaOutputStream extends OutputStream
 	
 	public AstegaOutputStream(AstegaEncoder encoder, File source, File destination, int size) throws IOException
 	{
+		if (destination.exists())
+			destination.delete();
+		
 		this.destination = destination;
 		samples = new AstegaSample(source, 1, 44100, 16, size);
 		this.encoder = encoder;
@@ -103,6 +109,8 @@ public class AstegaOutputStream extends OutputStream
 	@Override
 	public void flush() throws IOException
 	{
+		encoder.flush();
+		
 		int location = encoder.tell();
 		encoder.seek(0);
 		writeInt(getSize());

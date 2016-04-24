@@ -48,6 +48,12 @@ public class NullCoder implements AstegaCodec
 		int sample = samples.getRawSample(index++);
 		return (byte) (sample & 0xFF);
 	}
+	
+	@Override
+	public void flush()
+	{
+		
+	}
 }
 
 
