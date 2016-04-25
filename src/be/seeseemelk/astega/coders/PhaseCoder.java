@@ -121,7 +121,7 @@ public class PhaseCoder implements AstegaCodec
 		
 		for (int i = 0; i < dataSize; i++)
 		{
-			double value = clamp(dft[i]*offset, -offset, offset);
+			double value = clamp(dft[i]*offset, -offset, offset-1);
 			if (i < numFrames)
 				samples.setRawSample(i+segmentOffset, (int) value);
 		}
