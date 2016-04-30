@@ -1,9 +1,5 @@
 package be.seeseemelk.astega.coders;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.jtransforms.fft.DoubleFFT_1D;
 
 import be.seeseemelk.astega.AstegaSample;
@@ -163,12 +159,12 @@ public class PhaseCoder implements AstegaCodec
 		System.out.println("Encoding...");
 		int segments = (int) Math.ceil((double) samples.getNumberOfFrames() / dataSize);
 		
-		ExecutorService executor = Executors.newCachedThreadPool();
+		//ExecutorService executor = Executors.newCachedThreadPool();
 		
 		for (int i = 0; i < segments; i++)
 		{
-			//flushSegment(i);
-			int index = i;
+			flushSegment(i);
+			/*int index = i;
 			executor.submit(new Runnable() {
 				
 				@Override
@@ -176,15 +172,15 @@ public class PhaseCoder implements AstegaCodec
 				{
 					flushSegment(index);
 				}
-			});
+			});*/
 		}
 		
-		try {
+		/*try {
 			executor.shutdown();
 			while (!executor.awaitTermination(60, TimeUnit.SECONDS)) ;
 		} catch (InterruptedException e) {
 			System.err.println("Executor service interrupted: " + e.getMessage());
-		}
+		}*/
 			
 		System.gc();
 		System.out.println("Done");
