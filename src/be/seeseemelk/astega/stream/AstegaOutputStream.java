@@ -53,8 +53,8 @@ public class AstegaOutputStream extends OutputStream
 	}
 	
 	/**
-	 * Get the amount of bytes that have already been saved
-	 * @return The amount of bytes that were saved.
+	 * Get the length of bytes that have already been written
+	 * @return The length of bytes that were written.
 	 */
 	public int getSize()
 	{
@@ -78,7 +78,7 @@ public class AstegaOutputStream extends OutputStream
 		
 		encoder.write(Byte.toUnsignedInt(b));
 		
-		if (encoder.tell() - 1 > size)
+		if (encoder.tell() > size)
 			size++;
 	}
 	

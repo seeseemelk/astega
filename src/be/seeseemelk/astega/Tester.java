@@ -43,9 +43,14 @@ public class Tester
 		for (int i = 32; i < length; i++)
 		{
 			int value = sample.getRawSample(i);
-			double noise = (Math.random()-0.5) * noiseconstant;
-			value += (int) noise;
-			sample.setRawSample(i, value);
+			if (Math.random() <= rate)
+			{
+				double noise = (Math.random() - 0.5) * (Math.pow(2.0, (double) sample.getBitsPerSample()-1.0)-1.0);
+				sample.setRawSample(i, (int) noise);
+			}
+			//double noise = (Math.random()-0.5) * noiseconstant;
+			//value += (int) Math.round(noise);
+			//sample.setRawSample(i, value);
 		}
 		
 		sample.write(outputFile);
@@ -118,6 +123,11 @@ public class Tester
 		lastRead = read;
 		lastBad = bad;
 		lastBadPercentage = badPercentage;
+		
+		if (bad >= 10)
+		{
+			System.err.println("(" + (bad - 10) + " more read errors)");
+		}
 		
 		if (read <= 0)
 		{

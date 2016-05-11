@@ -1,5 +1,8 @@
 package be.seeseemelk.astega.coders;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.jtransforms.fft.DoubleFFT_1D;
 
 import be.seeseemelk.astega.AstegaSample;
@@ -13,12 +16,112 @@ public class PhaseCoder implements AstegaCodec
 	private int dataSize = 0;
 	private int bitIndex = 0;
 	
+	private boolean allowDecode = false;
+	
+	private double[] firstPhases;
+	private double[] originalPhases;
+	
+	public PhaseCoder()
+	{
+		
+	}
+	
+	public PhaseCoder(File originalFile, int originalSize) throws IOException
+	{
+		originalSize += 4;
+		AstegaSample samples = new AstegaSample(originalFile);
+		
+		// Load the original phases
+		originalPhases = new double[originalSize*8];
+		fillArrayWithPhases(originalPhases, samples, 0, originalPhases.length);
+		
+		allowDecode = true;
+	}
+	
+	private double normalizeAngle(double angle)
+	{
+	    double newAngle = angle;
+	    while (newAngle <= -180.0) newAngle += 360.0;
+	    while (newAngle > 180.0) newAngle -= 360.0;
+	    return newAngle;
+	}
+
+	private void fillArrayWithPhases(double[] array, AstegaSample samples, int start, int size)
+	{
+		double[] dft = new double[size*2];
+		
+		int offset = (int) Math.pow(2, samples.getBitsPerSample()-1);
+		
+		if (size >= (samples.getNumberOfFrames() + start))
+		{
+			System.err.println("Too many bytes to create phase table");
+			System.exit(1);
+		}
+		
+		int end = size+start;
+		for (int i = start; i < end; i++)
+		{
+			dft[i] = ((double) samples.getSample(i, 0)); // / offset;
+		}
+		
+		DoubleFFT_1D fft = new DoubleFFT_1D(size);
+		fft.realForwardFull(dft);
+		
+		double real, imag;
+		double phase;
+		
+		for (int i = 0; i < dft.length; i+=2)
+		{
+			real = dft[i];
+			imag = dft[i+1];
+			
+			phase = Math.atan2(imag, real);
+			array[i/2] = Math.toDegrees(phase);
+		}
+	}
+	
+	private void readAllData()
+	{
+		data = new byte[originalPhases.length / 8];
+		
+		int dataIndex, bitIndex;
+		double deltaPhase;
+		
+		System.out.println("Original phases length: " + originalPhases.length);
+		
+		for (int i = 0; i < originalPhases.length; i++)
+		{
+			dataIndex = i / 8;
+			bitIndex = i % 8;
+			
+			deltaPhase = normalizeAngle(originalPhases[i] - firstPhases[i]);
+			//System.out.println(originalPhases[i] + " - " + firstPhases[i] + " = " + deltaPhase);
+			System.out.println(deltaPhase);
+			if (deltaPhase < 0)
+			{
+				data[dataIndex] |= 1 << bitIndex;
+				//System.out.println("Bit " + bitIndex + ": " + data[dataIndex]);
+			}
+		}
+	}
+	
 	@Override
 	public void setSamples(AstegaSample samples)
 	{
 		this.samples = samples;
-		lastIndex = samples.getNumberOfSamples();
-		data = new byte[getSizeLimit()];
+		lastIndex = samples.getNumberOfFrames();
+		
+		if (allowDecode)
+		{
+			System.out.println("Calculating first phases");
+			firstPhases = new double[originalPhases.length];
+			fillArrayWithPhases(firstPhases, samples, 0, originalPhases.length);
+			readAllData();
+		}
+		else
+		{
+			data = new byte[getSizeLimit()];
+		}
 	}
 	
 	@Override
@@ -30,13 +133,13 @@ public class PhaseCoder implements AstegaCodec
 	@Override
 	public void seek(int b)
 	{
-		index = b * 8;
+		index = b;
 	}
 
 	@Override
 	public int tell()
 	{
-		return index / 8;
+		return index;
 	}
 	
 	@Override
@@ -82,50 +185,29 @@ public class PhaseCoder implements AstegaCodec
 		int segmentOffset = dataSize * segment;
 		int numFrames = samples.getNumberOfFrames();
 		
-		//System.out.println("A");
 		for (int i = 0; i < dataSize; i++)
 		{
 			if ((i+segmentOffset) >= numFrames)
 				dft[i] = 0;
 			else
-				dft[i] = ((double) samples.getSample(i + segmentOffset, 0)) / offset;
+				dft[i] = ((double) samples.getSample(i + segmentOffset, 0) / 2);
 		}
-		
-		//System.out.println("B");
 		
 		DoubleFFT_1D fft = new DoubleFFT_1D(dataSize);
 		fft.realForwardFull(dft);
 		
-		double phaseShiftAmount = Math.toDegrees(90);
+		double phaseShiftAmount = Math.toRadians(90.0);
 		
 		double real, imag;
 		double phase, amplitude;
 		
 		for (int i = 0; i < dft.length; i+=2)
 		{
-			//real = dft[i];
-			//imag = dft[i+1];
-			
-			/*t = real;
-			
-			if (getNextBitOfData() == 0)
-			{
-				real = imag;
-				imag = -t;
-			}
-			else
-			{
-				real = -imag;
-				imag = t;
-			}
-			
-			dft[i] = real;
-			dft[i+1] = imag;*/
-			
 			real = dft[i];
 			imag = dft[i+1];
 			
 			phase = Math.atan2(imag, real);
+			//phase += phaseShiftAmount; 
 			
 			if (getNextBitOfData() == 0)
 				phase += phaseShiftAmount;
@@ -134,23 +216,34 @@ public class PhaseCoder implements AstegaCodec
 			
 			amplitude = Math.sqrt(real*real + imag*imag);
 			
+			//if (segment <= 0)
+				//System.out.println("Amplitude at " + i + " = " + amplitude);
+			
+			//if (amplitude <= 10)
+				//amplitude += 10;
+			
+			//System.out.println(amplitude);
+			
 			real = Math.cos(phase) * amplitude;
 			imag = Math.sin(phase) * amplitude;
 			
-			dft[i] = real;
-			dft[i+1] = imag;
+			//dft[i] = real;
+			//dft[i+1] = imag;
 		}
 		
-		// Calculating inverse dft
+		// Calculate inverse dft
 		fft.realInverse(dft, true);
 		
-		for (int i = 0; i < dataSize; i++)
+		for (int i = 0; i < dataSize; i+=2)
 		{
-			double value = clamp(dft[i]*offset, -offset, offset-1);
+			double value = clamp(dft[i], -offset, offset-1);
+			if (Math.abs(dft[i] - value) > 0.1)
+				System.out.println("Value clamped " + i);
+			//System.out.println(i + ": " + dft[i]);
+			
 			if (i+segmentOffset < numFrames)
-				samples.setRawSample(i+segmentOffset, (int) value);
+				samples.setSample((i/2)+segmentOffset, 0, (int) Math.round(value));
 		}
-		fft = null;
 	}
 	
 	@Override
@@ -159,28 +252,11 @@ public class PhaseCoder implements AstegaCodec
 		System.out.println("Encoding...");
 		int segments = (int) Math.ceil((double) samples.getNumberOfFrames() / dataSize);
 		
-		//ExecutorService executor = Executors.newCachedThreadPool();
-		
 		for (int i = 0; i < segments; i++)
+		//for (int i = 0; i < 1; i++)
 		{
 			flushSegment(i);
-			/*int index = i;
-			executor.submit(new Runnable() {
-				
-				@Override
-				public void run()
-				{
-					flushSegment(index);
-				}
-			});*/
 		}
-		
-		/*try {
-			executor.shutdown();
-			while (!executor.awaitTermination(60, TimeUnit.SECONDS)) ;
-		} catch (InterruptedException e) {
-			System.err.println("Executor service interrupted: " + e.getMessage());
-		}*/
 			
 		System.gc();
 		System.out.println("Done");
